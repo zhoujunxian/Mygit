@@ -1,0 +1,52 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+using System.Net;
+using System.Collections;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Experient
+{
+    class Crawler
+    {         
+        public string DownLoad(string url)
+        {
+            try
+            {
+                WebClient webClient = new WebClient();
+                webClient.Encoding = Encoding.UTF8;
+                string html = webClient.DownloadString(url);                       
+                return html;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return "";
+            }
+        }
+
+        public string Parse(string html)
+        {
+            string strRef = @"/topic/[0-9]+/top-answers";
+            Regex rx = new Regex(strRef);            
+            Match m = rx.Match(html);
+            return m.Value;
+            
+        }
+
+        public string GetTopAnswer(string url)
+        {
+            string html = DownLoad(url);
+            string urls=Parse(html);
+            string URL = "https://www.zhihu.com" + urls;
+            return URL;
+        }
+    }
+
+
+    
+}
