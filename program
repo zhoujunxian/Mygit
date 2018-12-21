@@ -1,0 +1,86 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+using System.Net;
+using System.Collections;
+using System.Text.RegularExpressions;
+using System.Threading;
+
+
+namespace Crawl4
+{
+    public class Crawler
+    {
+        private Hashtable urls = new Hashtable();
+        private int count = 0;
+        List<String> res = new List<String>();
+
+        static void Main(string[] args)
+        {
+            Crawler myCrawler = new Crawler();
+            string startUrl = "https://www.zhihu.com/question/306240430/answer/556525456";
+            
+            if (args.Length >= 1) startUrl = args[0];
+            myCrawler.urls.Add(startUrl, false);
+
+            new Thread(myCrawler.Crawl).Start();
+            // ()=> myCrawler.Crawl(startUrl2)});
+            Console.ReadLine();
+        }
+
+        private void Crawl()
+        {
+            Console.WriteLine("start to run......");
+            while (true)
+            {
+                string current = null;
+                foreach (String url in urls.Keys)
+                {
+                    if ((bool)urls[url]) continue;
+                    current = url;
+                }
+                if (current == null || count > 10) break;
+                Console.WriteLine("running in the " + current);
+                string html = Download(current);
+                urls[current] = true;
+                count++;
+                Prase(html);
+            }
+            Console.WriteLine("end the running");
+        }
+
+        public string Download(string url)
+        {
+            try
+            {
+                WebClient webClient = new WebClient();
+                webClient.Encoding = Encoding.UTF8;
+                string html = webClient.DownloadString(url);
+                string fileName = count.ToString();
+                File.WriteAllText(fileName, html, Encoding.UTF8);
+                return html;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return "";
+            }
+        }
+
+        public void Prase(string html)
+        {
+            Regex reg=new Regex(@"(?<=""urlToken"":)([\S\s]*?)(?=,""name"")", RegexOptions.IgnoreCase);
+            
+            MatchCollection matches = reg.Matches(html);
+            foreach (Match match in matches)
+            {
+                String x = match.ToString().Replace("\"", "")+ "/activities";
+                res.Add("http://www.zhihu.com/people/" + x);
+                Console.WriteLine("http://www.zhihu.com/people/" + x + '\n');
+            }
+        }
+    }
+}
